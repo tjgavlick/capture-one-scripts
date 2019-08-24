@@ -1,12 +1,12 @@
 -- parent directory to build our nested structure inside
-set basePath to POSIX path of (path to home folder) & "/Desktop/tmp/test/"
+set basePath to POSIX path of (path to home folder) & "/Dropbox/Photos/"
 
 -- recipe name to enable for exporting
 set outputRecipe to "Dropbox Sharing"
 
--- for testing: max iterations
+-- for safety and/or testing: max iterations
 global maxIterations
-set maxIterations to 10
+set maxIterations to 50000
 global currentIteration
 set currentIteration to 1
 
@@ -74,6 +74,10 @@ end processNestedCollection
 
 
 tell application "Capture One 12"
+	-- get user confirmation
+	set dialogText to "Processing your entire user album library can potentially take a very long time. Are you sure?"
+	display dialog dialogText buttons {"Cancel", "Go for it"} default button "Go for it" cancel button "Cancel" with icon caution
+	
 	-- make sure only our preferred recipe is active
 	repeat with thisRecipe in (get recipes of current document)
 		if (name of thisRecipe is outputRecipe) then
@@ -87,4 +91,6 @@ tell application "Capture One 12"
 	repeat with collectionItem in (get collections of current document)
 		my processNestedCollection(collectionItem, basePath)
 	end repeat
+	
+	display dialog "Added " & (currentIteration - 1) & " variants to process queue"
 end tell
