@@ -9,3 +9,9 @@ Exports out your entire C1 user collections structure to disk. I use this to kic
 If you have a lot of photos, *this will take a long time*.
 
 Configure your base directory and your preferred process recipe name in the first few lines of the script.
+
+## Selected Collections to Folder Structure
+
+Similar functionality as the above, but scoped to only the selected collection.
+
+Once again, configure base directory and process recipe in the script.
