@@ -4,6 +4,12 @@ set basePath to POSIX path of (path to home folder) & "/Desktop/tmp/test/"
 -- recipe name to enable for exporting
 set outputRecipe to "Dropbox Sharing"
 
+-- for testing: max iterations
+global maxIterations
+set maxIterations to 100
+global currentIteration
+set currentIteration to 1
+
 
 -- string find and replace helper
 on replace(theText, theSearchString, theReplacementString)
@@ -19,6 +25,9 @@ end replace
 -- handle both albums and sub-collections inside a given collection
 on processNestedCollection(thisCollection, parentPath)
 	tell application "Capture One 12"
+	
+		-- ignore tmp and utility directories (my convention is to prefix them with _)
+		if not name of thisCollection starts with "_" then
 		
 		-- standard (non-smart) album in user collections
 		if kind of thisCollection is equal to album then
@@ -35,6 +44,10 @@ on processNestedCollection(thisCollection, parentPath)
 			-- get all photos within this collection
 			repeat with thisVariant in (get variants of thisCollection)
 				process thisVariant
+				set currentIteration to currentIteration + 1
+				if currentIteration is greater than maxIterations then
+					error number -128 -- "user cancelled"
+				end if
 			end repeat
 		end if
 		
@@ -44,6 +57,9 @@ on processNestedCollection(thisCollection, parentPath)
 				my processNestedCollection(subCollection, parentPath & (name of thisCollection) & "/")
 			end repeat
 		end if
+		end if
+		
+		
 	end tell
 end processNestedCollection
 
