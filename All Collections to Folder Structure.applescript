@@ -22,8 +22,8 @@ on processNestedCollection(thisCollection, parentPath)
 			
 			-- create a folder for this album if it doesn't exist
 			set thisPath to (parentPath & (name of thisCollection) & "/")
-			set escapedPath to my replace(thisPath, " ", "\\ ")
-			do shell script "mkdir -p " & escapedPath
+			set escapedPath to my replace(thisPath, "\"", "\\\"")
+			do shell script "mkdir -p \"" & escapedPath & "\""
 			set dir to POSIX file thisPath as alias
 		end if
 		
