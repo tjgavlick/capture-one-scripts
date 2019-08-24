@@ -6,7 +6,7 @@ set outputRecipe to "Dropbox Sharing"
 
 -- for testing: max iterations
 global maxIterations
-set maxIterations to 100
+set maxIterations to 10
 global currentIteration
 set currentIteration to 1
 
@@ -25,38 +25,41 @@ end replace
 -- handle both albums and sub-collections inside a given collection
 on processNestedCollection(thisCollection, parentPath)
 	tell application "Capture One 12"
-	
+		
 		-- ignore tmp and utility directories (my convention is to prefix them with _)
-		if not name of thisCollection starts with "_" then
-		
-		-- standard (non-smart) album in user collections
-		if kind of thisCollection is equal to album then
+		if name of thisCollection does not start with "_" then
 			
-			-- create a folder for this album if it doesn't exist, then get a reference
-			set thisPath to (parentPath & (name of thisCollection) & "/")
-			set escapedPath to my replace(thisPath, "\"", "\\\"")
-			do shell script "mkdir -p \"" & escapedPath & "\""
-			set dir to POSIX file thisPath as alias
+			-- standard (non-smart) album in user collections
+			if kind of thisCollection is equal to album then
+				
+				-- create a folder for this album if it doesn't exist, then get a reference
+				set thisPath to (parentPath & (name of thisCollection) & "/")
+				set escapedPath to my replace(thisPath, "\"", "\\\"")
+				do shell script "mkdir -p \"" & escapedPath & "\""
+				set dir to POSIX file thisPath as alias
+				
+				-- set recipe output to our directory
+				set output of current document to dir
+				
+				-- get all photos within this collection
+				repeat with thisVariant in (get variants of thisCollection)
+					-- only process non-rejects and non-helper variants
+					if color tag of thisVariant is equal to 0 or color tag of thisVariant is equal to 4 then
+						process thisVariant
+						set currentIteration to currentIteration + 1
+						if currentIteration is greater than maxIterations then
+							error number -128 -- "user cancelled"
+						end if
+					end if
+				end repeat
+			end if
 			
-			-- set recipe output to our directory
-			set output of current document to dir
-			
-			-- get all photos within this collection
-			repeat with thisVariant in (get variants of thisCollection)
-				process thisVariant
-				set currentIteration to currentIteration + 1
-				if currentIteration is greater than maxIterations then
-					error number -128 -- "user cancelled"
-				end if
-			end repeat
-		end if
-		
-		-- nested group in user collections - kick back into this recursive function
-		if kind of thisCollection is equal to group and not name of thisCollection is equal to "Recent Imports" then
-			repeat with subCollection in (get collections of thisCollection)
-				my processNestedCollection(subCollection, parentPath & (name of thisCollection) & "/")
-			end repeat
-		end if
+			-- nested group in user collections - kick back into this recursive function
+			if kind of thisCollection is equal to group and not name of thisCollection is equal to "Recent Imports" then
+				repeat with subCollection in (get collections of thisCollection)
+					my processNestedCollection(subCollection, parentPath & (name of thisCollection) & "/")
+				end repeat
+			end if
 		end if
 		
 		
