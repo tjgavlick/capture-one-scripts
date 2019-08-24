@@ -41,10 +41,16 @@ on processNestedCollection(thisCollection, parentPath)
 				-- set recipe output to our directory
 				set output of current document to dir
 				
-				-- get all photos within this collection
+				-- process collection variants
 				repeat with thisVariant in (get variants of thisCollection)
+					
 					-- only process non-rejects and non-helper variants
 					if color tag of thisVariant is equal to 0 or color tag of thisVariant is equal to 4 then
+						
+						-- Capture One appends numbers to the output filename if there is a conflict, but we want overwriting
+						-- so, delete existing file if it already exists
+						do shell script "rm -f \"" & escapedPath & (name of thisVariant) & "\".*"
+						
 						process thisVariant
 						set currentIteration to currentIteration + 1
 						if currentIteration is greater than maxIterations then
