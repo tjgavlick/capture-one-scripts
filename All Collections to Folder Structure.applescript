@@ -78,6 +78,16 @@ tell application "Capture One 12"
 	set dialogText to "Processing your entire user album library can potentially take a very long time. Are you sure?"
 	display dialog dialogText buttons {"Cancel", "Go for it"} default button "Go for it" cancel button "Cancel" with icon caution
 	
+	-- if we have a collection selected, Capture One appends it to the list of all collections
+	-- this is always a duplicate and is almost always outside of the folder structure
+	-- so, discard it
+	set allCollections to (get collections of current document)
+	
+	set selectedCollection to current collection of current document
+	if selectedCollection is not missing value then
+		set allCollections to items 1 through -2 of allCollections
+	end if
+	
 	-- make sure only our preferred recipe is active
 	repeat with thisRecipe in (get recipes of current document)
 		if (name of thisRecipe is outputRecipe) then
@@ -88,7 +98,7 @@ tell application "Capture One 12"
 	end repeat
 	
 	-- get all collections at root level and kick them into recursive listing
-	repeat with collectionItem in (get collections of current document)
+	repeat with collectionItem in allCollections
 		my processNestedCollection(collectionItem, basePath)
 	end repeat
 	
