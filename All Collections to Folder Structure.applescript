@@ -1,6 +1,9 @@
 -- parent directory to build our nested structure inside
 set basePath to POSIX path of (path to home folder) & "/Desktop/tmp/test/"
 
+-- recipe name to enable for exporting
+set outputRecipe to "Dropbox Sharing"
+
 
 -- string find and replace helper
 on replace(theText, theSearchString, theReplacementString)
@@ -17,14 +20,22 @@ end replace
 on processNestedCollection(thisCollection, parentPath)
 	tell application "Capture One 12"
 		
-		-- simple album in user collections
+		-- standard (non-smart) album in user collections
 		if kind of thisCollection is equal to album then
 			
-			-- create a folder for this album if it doesn't exist
+			-- create a folder for this album if it doesn't exist, then get a reference
 			set thisPath to (parentPath & (name of thisCollection) & "/")
 			set escapedPath to my replace(thisPath, "\"", "\\\"")
 			do shell script "mkdir -p \"" & escapedPath & "\""
 			set dir to POSIX file thisPath as alias
+			
+			-- set recipe output to our directory
+			set output of current document to dir
+			
+			-- get all photos within this collection
+			repeat with thisVariant in (get variants of thisCollection)
+				process thisVariant
+			end repeat
 		end if
 		
 		-- nested group in user collections - kick back into this recursive function
@@ -37,8 +48,17 @@ on processNestedCollection(thisCollection, parentPath)
 end processNestedCollection
 
 
--- get all collections at root level and kick them into recursive listing
 tell application "Capture One 12"
+	-- make sure only our preferred recipe is active
+	repeat with thisRecipe in (get recipes of current document)
+		if (name of thisRecipe is outputRecipe) then
+			set enabled of thisRecipe to true
+		else
+			set enabled of thisRecipe to false
+		end if
+	end repeat
+	
+	-- get all collections at root level and kick them into recursive listing
 	repeat with collectionItem in (get collections of current document)
 		my processNestedCollection(collectionItem, basePath)
 	end repeat
