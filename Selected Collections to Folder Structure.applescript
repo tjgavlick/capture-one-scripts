@@ -103,11 +103,17 @@ tell application "Capture One 12"
 	set progress completed units to 0
 	set progress text to "Crawling collections ..."
 	
+	-- pause queue to free up C1's resources to traverse our collections and variants
+	set processing queue enabled of current document to false
+	
 	-- kick collections into recursive listing
 	repeat with collectionItem in allCollections
 		my processNestedCollection(collectionItem, basePath, false)
 		set progress completed units to ((progress completed units) + 1)
 	end repeat
+	
+	-- start crunching
+	set processing queue enabled of current document to true
 	
 	display dialog "Added " & (currentIteration - 1) & " variants to process queue"
 end tell
