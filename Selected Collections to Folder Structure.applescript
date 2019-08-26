@@ -98,9 +98,15 @@ tell application "Capture One 12"
 	set allCollections to (get collections of current document)
 	set allCollections to items 1 through -2 of allCollections
 	
+	-- set up progress bar for collection tree scan
+	set progress total units to the length of allCollections
+	set progress completed units to 0
+	set progress text to "Crawling collections ..."
+	
 	-- kick collections into recursive listing
 	repeat with collectionItem in allCollections
 		my processNestedCollection(collectionItem, basePath, false)
+		set progress completed units to ((progress completed units) + 1)
 	end repeat
 	
 	display dialog "Added " & (currentIteration - 1) & " variants to process queue"
