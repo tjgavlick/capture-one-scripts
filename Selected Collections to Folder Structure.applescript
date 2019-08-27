@@ -57,7 +57,9 @@ on processNestedCollection(thisCollection, parentPath, isWorkingCollection)
 						
 						-- Capture One appends numbers to the output filename if there is a conflict, but we want overwriting
 						-- so, delete existing file if it already exists
-						do shell script "rm -f \"" & escapedPath & (name of thisVariant) & "\".*"
+						-- we have to assume the image name is inside the output filename, as C1 does not (currently) give us
+						-- a way to get the expected output filename of this variant from the recipe or queue
+						do shell script "rm -f \"" & escapedPath & "\"*\"" & (name of thisVariant) & "\"*"
 						
 						process thisVariant
 						set currentIteration to currentIteration + 1
