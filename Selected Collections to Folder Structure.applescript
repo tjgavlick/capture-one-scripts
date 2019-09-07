@@ -13,6 +13,10 @@ set maxIterations to 50000
 global currentIteration
 set currentIteration to 1
 
+-- overwrite mode
+global overwrite
+set overwrite to false
+
 
 -- string find and replace helper
 on replace(theText, theSearchString, theReplacementString)
@@ -55,16 +59,22 @@ on processNestedCollection(thisCollection, parentPath, isWorkingCollection)
 					-- only process non-rejects and non-helper variants
 					if color tag of thisVariant is equal to 0 or color tag of thisVariant is equal to 4 then
 						
-						-- Capture One appends numbers to the output filename if there is a conflict, but we want overwriting
-						-- so, delete existing file if it already exists
-						-- we have to assume the image name is inside the output filename, as C1 does not (currently) give us
-						-- a way to get the expected output filename of this variant from the recipe or queue
-						do shell script "rm -f \"" & escapedPath & "\"*\"" & (name of thisVariant) & "\"*"
+						-- C1 does not (currently) give us a way to get the expected output filename of this variant from the recipe or queue, so we must unfortunately assume the photo name is included in the output filename
+						-- here we try to get a filename for overwrite testing
+						try
+							set existingFile to first paragraph of (do shell script "ls \"" & escapedPath & "\" | grep \"" & (name of thisVariant) & "\"")
+						on error
+							set existingFile to missing value
+						end try
 						
-						process thisVariant
-						set currentIteration to currentIteration + 1
-						if currentIteration is greater than maxIterations then
-							error number -128 -- "user cancelled"
+						if existingFile is missing value or overwrite is true then
+							do shell script "rm -f \"" & escapedPath & "\"*\"" & (name of thisVariant) & "\"*"
+							
+							process thisVariant
+							set currentIteration to currentIteration + 1
+							if currentIteration is greater than maxIterations then
+								error number -128 -- "user cancelled"
+							end if
 						end if
 					end if
 				end repeat
@@ -94,6 +104,15 @@ tell application "Capture One 12"
 			set enabled of thisRecipe to false
 		end if
 	end repeat
+	
+	-- get overwrite mode preference from user
+	set dialogText to "Append new photos or overwrite all?
+
+Append mode will leave photos with the same name alone, while overwrite mode will delete them and save new versions."
+	set userModeSelection to (display dialog dialogText buttons {"Overwrite", "Append"} default button "Append" with icon note)
+	if button returned of userModeSelection is equal to "Overwrite" then
+		set overwrite to true
+	end if
 	
 	-- Capture One appends the selected collection to the return of all collections
 	-- so, trim it off to avoid duplicate work
