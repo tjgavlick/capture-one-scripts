@@ -136,5 +136,5 @@ Append mode will leave photos with the same name alone, while overwrite mode wil
 	-- start crunching
 	set processing queue enabled of current document to true
 	
-	display dialog "Added " & (currentIteration - 1) & " variants to process queue"
+	display dialog "Added " & (currentIteration - 1) & " variants to process queue" giving up after 10
 end tell
